@@ -27,18 +27,32 @@ class EpicDownloader:
     def __init__(self,
                  epic_55_base_url='https://data.bris.ac.uk/datasets/3h91syskeag572hl6tvuovwv4d',
                  epic_100_base_url='https://data.bris.ac.uk/datasets/2g1n6qdydwa9u22shpxqzp0t8m',
+                 masks_base_url='https://data.bris.ac.uk/datasets/3l8eci2oqgst92n14w2yqi5ytu',
                  base_output=str(Path.home()),
                  splits_path_epic_55='data/epic_55_splits.csv',
                  splits_path_epic_100='data/epic_100_splits.csv',
-                 md5_path='data/md5.csv'):
+                 md5_path='data/md5.csv',
+                 errata_path='data/errata.csv',
+                 errata_only=False):
         self.base_url_55 = epic_55_base_url.rstrip('/')
         self.base_url_100 = epic_100_base_url.rstrip('/')
-        self.base_output = os.path.join(base_output, 'EPIC-KITCHENS')
+        self.base_url_masks = masks_base_url.rstrip('/')
+        self.base_output = '/data/bilel.guetarni/'
         self.videos_per_split = {}
         self.challenges_splits = []
-        self.md5 = {'55': {}, '100': {}}
+        self.md5 = {'55': {}, '100': {}, 'errata': {}}
+        self.errata = {}
         self.parse_splits(splits_path_epic_55, splits_path_epic_100)
         self.load_md5(md5_path)
+        self.load_errata(errata_path)
+        self.errata_only = errata_only
+
+    def load_errata(self, path):
+        with open(path) as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=',')
+
+            for row in reader:
+                self.errata[row['rdsf_path']] = row['dropbox_path']
 
     def load_md5(self, path):
         with open(path) as csvfile:
@@ -169,23 +183,59 @@ class EpicDownloader:
         self.download_items(epic_100_dicts, None, epic_100_accl_parts)
         self.download_items(epic_100_dicts, None, epic_100_gyro_parts)
 
-    def download_items(self, video_dicts, epic_55_parts_func, epic_100_parts_func):
+    def download_masks(self, video_dicts, file_ext='pkl'):
+        def remote_object_hands_parts(d):
+            return ['hand-objects', d['participant_str'], '{}.{}'.format(d['video_id'], file_ext)]
+
+        def remote_masks_parts(d):
+            return ['masks', d['participant_str'], '{}.{}'.format(d['video_id'], file_ext)]
+
+        def output_object_hands_parts(d):
+            return [d['participant_str'], 'hand-objects', '{}.{}'.format(d['video_id'], file_ext)]
+
+        def output_masks_parts(d):
+            return [d['participant_str'], 'masks', '{}.{}'.format(d['video_id'], file_ext)]
+
+        # data is organised in the same way for both epic-55 and the extension so we pass the same functions
+        self.download_items(video_dicts, remote_object_hands_parts, remote_object_hands_parts,
+                            from_url=self.base_url_masks, output_parts=output_object_hands_parts)
+        self.download_items(video_dicts, remote_masks_parts, remote_masks_parts,
+                            from_url=self.base_url_masks, output_parts=output_masks_parts)
+
+    def download_items(self, video_dicts, epic_55_parts_func, epic_100_parts_func, from_url=None, output_parts=None):
         for video_id, d in video_dicts.items():
             extension = d['extension']
             remote_parts = epic_100_parts_func(d) if extension else epic_55_parts_func(d)
-            url = '/'.join([self.base_url_100 if extension else self.base_url_55] + remote_parts)
-            output_path = os.path.join(self.base_output, *epic_100_parts_func(d))
+            erratum_url = self.errata.get('/'.join(remote_parts), None)
 
-            if self.file_already_downloaded(output_path, remote_parts, extension):
+            if erratum_url is None:
+                if self.errata_only:
+                    continue
+
+                if from_url is None:
+                    base_url = self.base_url_100 if extension else self.base_url_55
+                else:
+                    base_url = from_url
+
+                url = '/'.join([base_url] + remote_parts)
+                version = '100' if extension else '55'
+            else:
+                print_header('~ Going to download an erratum now! ~', char='~')
+                url = erratum_url
+                version = 'errata'
+
+            output_parts = epic_100_parts_func if output_parts is None else output_parts
+            output_path = os.path.join(self.base_output, *output_parts(d))
+
+            if self.file_already_downloaded(output_path, remote_parts, version):
                 print('This file was already downloaded, skipping it: {}'.format(output_path))
             else:
                 self.download_file(url, output_path)
 
-    def file_already_downloaded(self, output_path, parts, extension):
+    def file_already_downloaded(self, output_path, parts, version):
         if not os.path.exists(output_path):
             return False
 
-        version = '100' if extension else '55'
         key = '/'.join(parts)
         remote_md5 = self.md5[version].get(key, None)
 
@@ -236,14 +286,17 @@ class EpicDownloader:
         what_str = ', '.join(' '.join(w.split('_')) for w in what)
         participants_str = 'all' if participants == 'all' else ', '.join(['P{:02d}'.format(p) for p in participants])
 
-        print('Going to download: {}\n'
-              'for challenges: {}\n'
-              'splits: {}\n'
-              'participants: {}\n'
-              'data source: {}'.format(what_str, challenges, splits, participants_str, source))
+        if not self.errata_only:
+            print('Going to download: {}\n'
+                  'for challenges: {}\n'
+                  'splits: {}\n'
+                  'participants: {}\n'
+                  'data source: {}'.format(what_str, challenges, splits, participants_str, source))
 
         for w in what:
-            print_header('| Downloading {} now |'.format(' '.join(w.split('_'))), char='-')
+            if not self.errata_only:
+                print_header('| Downloading {} now |'.format(' '.join(w.split('_'))), char='-')
+
             func = getattr(self, 'download_{}'.format(w))
             func(video_dicts)
 
@@ -259,6 +312,8 @@ def create_parser():
                         help='Download optical flow frames')
     parser.add_argument('--object-detection_images', dest='what', action='append_const',
                         const='object_detection_images', help='Download object detection images (only for EPIC 55)')
+    parser.add_argument('--masks', dest='what', action='append_const',
+                        const='masks', help='Download Mask R-CNN masks and hand-object correspondences')
     parser.add_argument('--metadata', dest='what', action='append_const',
                         const='metadata', help='Download GoPro\'s metadata (only for EPIC 100)')
     parser.add_argument('--consent-forms', dest='what', action='append_const', const='consent_forms',
@@ -300,6 +355,7 @@ def create_parser():
     parser.add_argument('--val-target-test', dest='splits', action='append_const', const='val_target_test',
                         help='Download the smaller target test set used to validate hyper-parameters for domain '
                              'adaptation')
+    parser.add_argument('--errata', action='store_true', help='Download only errata files')
 
     return parser
 
@@ -317,7 +373,8 @@ def parse_args(parser):
         'GoPro\'s metadata is available only for EPIC 100'
 
     if args.what is None:
-        args.what = ('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'metadata', 'consent_forms')
+        args.what = ('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'metadata', 'consent_forms',
+                     'masks')
 
     if args.challenges is None:
         args.challenges = 'all'
@@ -334,4 +391,23 @@ def parse_args(parser):
                   'a comma-separated list of them, e.g. `--participants 1,2,3`.'.format(args.participants))
             exit(-1)
 
+    if args.errata:
+        args.what = tuple(w for w in args.what if w != 'consent_forms')
+
     return args
+
+
+if __name__ == '__main__':
+    assert sys.version_info.major == 3 and sys.version_info.minor >= 5, 'This script works with Python 3.5+. ' \
+                                                                        'Please use a more recent Python version'
+
+    parser = create_parser()
+    args = parse_args(parser)
+
+    print_header('*** Welcome to the EPIC Kitchens Downloader! ***')
+
+    downloader = EpicDownloader(base_output=args.output_path, errata_only=args.errata)
+    downloader.download(what=args.what, participants=args.participants, splits=args.splits, challenges=args.challenges,
+                        extension_only=args.extension_only, epic55_only=args.epic55_only)
+
+    print_header('*** All done, bye! ***')

@@ -1,0 +1,42 @@
+appliances: [tap, fridge, hob, kettle, oven, 'maker:coffee', heat, dishwasher, blender,
+  microwave, button, scale, alarm, freezer, light, 'machine:washing', 'processor:food',
+  'cooker:slow', plug, phone, 'fan:extractor', toaster, knob, wire, 'control:remote',
+  hoover, battery, tv, 'machine:sous:vide', heater, watch, power, computer, camera,
+  cd]
+baked goods and grains: [dough, bread, pasta, rice, flour, cereal, biscuit, oatmeal,
+  pie, noodle, cake, lentil, pancake, yeast, breadstick, roll, breadcrumb]
+cleaning: [sponge, cloth, 'liquid:washing', brush, tablet,
+  'pan:dust', 'powder:washing']
+containers: [lid, bottle, bag, container, box, package, jar, can, cover, cap, teapot,
+  basket, 'cellar:salt', backpack, cork]
+cookware: [pan, pot, tray, handle]
+crockery: [plate, bowl, glass, cup, jug]
+cutlery: [spoon, knife, fork, cutlery]
+dairy and eggs: [cheese, egg, milk, butter, yoghurt, cream, omelette]
+drinks: [water, coffee, tea, juice, wine, drink, cocktail, beer, gin, soda, whiskey]
+fruits and nuts: [peach, olive, lemon, seed, nut, banana, lime, orange, avocado, blueberry,
+  apple, coconut, raisin, grape, mango, kiwi, blackberry, pear, strawberry, almond,
+  fruit, cherry, melon, pineapple, raspberry, plum]
+furniture: [drawer, top, sink, kitchen, floor, chair, ladder, wall, shelf, stand,
+  window, candle, airer, 'door:kitchen']
+hand: [hand]
+materials: [paper, towel, glove, clothes, mat, napkin, 'towel:kitchen', 'wrap:plastic',
+  wrap, foil, apron, label, 'guard:hand', rubber, sheets, pillow]
+meat and substitute: [meat, chicken, tofu, sausage, salmon, fish, burger, pork, salami,
+  tuna, bacon, beef, quorn, shrimp, 'stick:crab', turkey]
+other: [rest, book, recipe, liquid, ice, air, bar, balloon, face]
+prepared food: [food, salad, mixture, pizza, spreads, curry, soup, sandwich, chocolate,
+  fishcakes, crisp, 'scotch:egg', 'ring:onion', popcorn, dumpling, 'extract:vanilla']
+rubbish: [bin, skin, rubbish, 'shell:egg', pith]
+spices and herbs and sauces: [oil, salt, sauce, chilli, spice, stock, sugar, ginger,
+  vinegar, powder, oregano, paste, parsley, coriander, hummus, basil, paprika, caper,
+  turmeric, thyme, cumin, mint, 'grass:lemon', cinnamon, rosemary, syrup]
+storage: [cupboard, 'rack:drying']
+utensils: ['board:chopping', spatula, colander, filter, scissors, chopstick, 'peeler:potato',
+  grater, ladle, juicer, clip, lighter, holder, 'pin:rolling', tongs, utensil, thermometer,
+  'spinner:salad', presser, 'opener:bottle', whetstone, whisk, slicer, 'cutter:pizza',
+  funnel, straw, masher, 'mat:sushi', pestle, key, pen, tape]
+vegetables: [onion, potato, pepper, carrot, tomato, garlic, mushroom, leaf, aubergine,
+  cucumber, courgette, vegetable, broccoli, squash, leek, lettuce, corn, 'onion:spring',
+  'choi:pak', 'bean:green', pea, spinach, kale, asparagus, stalk, bean, 'finger:lady',
+  celery, cabbage, artichoke, sprout, gherkin]
