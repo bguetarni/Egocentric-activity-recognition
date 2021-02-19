@@ -95,8 +95,8 @@ if __name__ == '__main__':
     
     for model_chkpt in os.listdir(args.models):
         # load saved model
-        model = tf.keras.models.load_model(model_chkpt, compile=False)
-        print(model.name)
+        model = tf.keras.models.load_model(args.models + model_chkpt, compile=False)
+        print(model_chkpt)
         
         if isinstance(model.layers[-1].output_shape, list):
             verb_only = False
@@ -165,10 +165,10 @@ if __name__ == '__main__':
         y_true_verb_labels = np.argmax(y_true_verb, axis=-1)
         y_pred_verb_labels = np.argmax(y_pred_verb, axis=-1)
         metrics = {
-            'verb_top_1_accuracy': [accuracy_score(y_true_verb_labels, y_pred_verb_labels)],
-            'verb_top_3_accuracy': [top_k_accuracy_score(y_true_verb_labels, y_pred_verb, k=3, labels=verb_labels)],
-            'verb_top_5_accuracy': [top_k_accuracy_score(y_true_verb_labels, y_pred_verb, k=5, labels=verb_labels)],
-            'verb_confusion_matrix': [confusion_matrix(y_true_verb_labels, y_pred_verb_labels, labels=verb_labels)]
+            'verb_top_1_accuracy': accuracy_score(y_true_verb_labels, y_pred_verb_labels),
+            'verb_top_3_accuracy': top_k_accuracy_score(y_true_verb_labels, y_pred_verb, k=3, labels=verb_labels),
+            'verb_top_5_accuracy': top_k_accuracy_score(y_true_verb_labels, y_pred_verb, k=5, labels=verb_labels),
+            'verb_confusion_matrix': confusion_matrix(y_true_verb_labels, y_pred_verb_labels, labels=verb_labels)
         }
 
         if not verb_only:
@@ -214,4 +214,4 @@ if __name__ == '__main__':
                 heatmap.get_figure().savefig(fname=heatmap_name)
                 print('     confusion matrix saved in ' + heatmap_name)
             else:  # display metric
-                print('     {}: {}'.format(metric_name, [round(i, 4) for i in metric_value]))
+                print('     {}: {}'.format(metric_name, metric_value))

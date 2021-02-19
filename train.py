@@ -186,7 +186,7 @@ if __name__ == '__main__':
         metrics = [tf.keras.metrics.Accuracy(), tf.keras.metrics.Precision(top_k=5)]
 
     history = {'train': {}, 'val': {}}
-    groups = utils.create_groups(ram_percent=args.memory_ratio, seq_length=args.nb_frames, version=args.dataset_version)  # create groups of videos to train
+    groups = utils.create_groups(memory_percent=args.memory_ratio, seq_length=args.nb_frames, version=args.dataset_version)  # create groups of videos to train
     for epoch in range(args.epochs//args.epochs_per_group):
         epoch_history = {'train': [], 'val': []}
 
